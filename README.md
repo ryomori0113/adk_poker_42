@@ -102,6 +102,7 @@ uv run python main.py
   # デフォルト（team1_agent:2人, team2_agent:2人）
   uv run python main.py --cli --agent-only
   
+  
   # カスタムエージェント構成
   uv run python main.py --cli --agent-only --agents "team1_agent:2,team3_agent:1,beginner_agent:1"
   

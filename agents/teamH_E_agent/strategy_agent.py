@@ -2,9 +2,10 @@
 # 概要: 戦略分析を専門に行う「サブAI」を定義するファイル
 
 from google.adk.agents import Agent
+from google.adk.models.lite_llm import LiteLlm
 
 # -----------------------------------------------------------------
-# 1. 🤖 サブAI (strategy_agent) の定義
+# 1.サブAI (strategy_agent) の定義
 # -----------------------------------------------------------------
 
 strategy_instruction = """あなたはテキサスホールデム・ポーカーの「戦略分析官」です。
@@ -47,7 +48,11 @@ strategy_instruction = """あなたはテキサスホールデム・ポーカー
     * ミドルペア、ボトムペア。または、トップペアだがキッカーが弱い手。
 * **`Draw (ドロー)`**:
     * （例：自分が A♥ K♥ を持っていて、ボードが J♥ 8♥ 3♠）
-    * フラッシュドロー（あと1枚でフラッシュ）またはストレートドレート（あと1枚でストレート）。
+    * フラッシュドロー（あと1枚でフラッシュ）またはストレートドロー（あと1枚でストレート）。
+    * *重要: ドローの場合、必ずアウツ(outs)の枚数を計算してください。**
+    * （例：フラッシュドローのみ = 9 outs）
+    * （例：OESD（オープンエンド・ストレートドロー）のみ = 8 outs）
+    * （例：フラッシュドロー + OESD = 15 outs）
 * **`Air / Weak Hand (何もなし)`**:
     * （例：自分がAKを持っていて、ボードが J-9-6）
     * 上記すべてに当てはまらない。ヒットしておらず、ドローでもない。
@@ -70,17 +75,16 @@ strategy_instruction = """あなたはテキサスホールデム・ポーカー
   "analysis_phase": "preflop | flop | turn | river",
   "hand_category": "Category 1 | Category 2 | Category 3 | Category 4 | Nuts Hand | Strong Made Hand | Marginal Hand | Draw | Air / Weak Hand",
   "board_texture": "N/A | Safe Board | Dangerous Board",
-  "is_late_game": true | false
+  "is_late_game": true | false,
+  "outs_count": <計算したアウツの枚数、ドローでない場合は0>
 }
 """
 
-# ⭐️ 修正点: modelの指定方法を修正
-# 'LiteLlm(model="...")' という文字列ではなく、LiteLlmオブジェクトを渡します
 strategy_agent = Agent(
     name="poker_strategy_analyzer",
     model=LiteLlm(model="openai/gpt-4o-mini"), 
     description="""ポーカーの状況を詳細に分析する戦略分析官。
-    プリフロップのカテゴリ、ポストフロップの役の強さ、ボードの危険度をJSONで返す。""",
+    プリフロップのカテゴリ、ポストフロップの役の強さ、ボードの危険度、アウツの数をJSONで返す。""",
     instruction=strategy_instruction,
     tools=[] 
 )
